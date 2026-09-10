@@ -1,0 +1,1098 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>my memory — 초점이 맞는 순간을 GIF로</title>
+<style>
+  :root{
+    --white:#ffffff; --gray:#f5f5f7; --ink:#1d1d1f; --sub:#86868b;
+    --blue:#0071e3; --line:#d2d2d7; --radius:18px;
+    --font:-apple-system,BlinkMacSystemFont,"SF Pro Display","SF Pro Text","Pretendard","Apple SD Gothic Neo","Helvetica Neue",Arial,sans-serif;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{font-family:var(--font);color:var(--ink);background:var(--white);
+    -webkit-font-smoothing:antialiased;letter-spacing:-0.01em}
+  a{color:var(--blue);text-decoration:none}
+
+  .nav{position:sticky;top:0;z-index:50;height:48px;display:flex;align-items:center;
+    justify-content:center;gap:10px;background:rgba(255,255,255,.72);
+    backdrop-filter:saturate(180%) blur(20px);-webkit-backdrop-filter:saturate(180%) blur(20px);
+    border-bottom:1px solid rgba(0,0,0,.08);font-size:14px}
+  .nav b{font-weight:600;letter-spacing:-0.02em}
+  .nav span{color:var(--sub)}
+
+  .hero{text-align:center;padding:76px 22px 44px;max-width:880px;margin:0 auto}
+  .hero h1{margin:0;font-size:clamp(44px,8.6vw,84px);line-height:1.04;font-weight:700;letter-spacing:-0.035em}
+  .hero h1 .soft{color:transparent;-webkit-text-stroke:1.4px var(--ink);filter:blur(3.5px);
+    animation:rack 6s cubic-bezier(.22,1,.36,1) infinite}
+  @keyframes rack{
+    0%{filter:blur(9px);opacity:.55}
+    48%{filter:blur(9px);opacity:.55}
+    66%{filter:blur(0);opacity:1;color:var(--ink);-webkit-text-stroke-width:0}
+    93%{filter:blur(0);opacity:1;color:var(--ink);-webkit-text-stroke-width:0}
+    100%{filter:blur(9px);opacity:.55}
+  }
+  @media (prefers-reduced-motion:reduce){
+    .hero h1 .soft{animation:none;color:var(--ink);-webkit-text-stroke-width:0;filter:none}
+  }
+  .hero p{margin:22px auto 0;max-width:33em;font-size:clamp(17px,2.2vw,21px);line-height:1.5;color:var(--sub)}
+
+  .stage-wrap{background:var(--gray);padding:0 0 6px}
+  .stage{max-width:1240px;margin:0 auto;padding:34px 22px 40px;
+    display:grid;grid-template-columns:minmax(0,1fr) 350px;gap:34px;align-items:start}
+  .viewer{background:#000;border-radius:26px;min-height:440px;display:flex;
+    align-items:center;justify-content:center;padding:24px;overflow:hidden;
+    box-shadow:0 22px 60px rgba(0,0,0,.22)}
+  canvas#stage{max-width:100%;max-height:70vh;display:block;border-radius:6px}
+  canvas#stage[hidden]{display:none}
+  .outsize{text-align:center;font-size:12px;color:var(--sub);margin-top:10px}
+  .empty{color:#6e6e73;text-align:center;font-size:15px;line-height:1.6;padding:60px 20px}
+  .empty strong{display:block;color:#f5f5f7;font-size:19px;font-weight:600;margin-bottom:8px}
+
+  .panel{display:flex;flex-direction:column;gap:24px;position:sticky;top:72px}
+  .field > h3{margin:0 0 10px;font-size:15px;font-weight:600;letter-spacing:-0.01em}
+  .field > .hint{margin:8px 0 0;font-size:12.5px;color:var(--sub);line-height:1.5}
+  .sub-row{margin-top:10px}
+
+  .drop{border:1.5px dashed var(--line);border-radius:var(--radius);background:var(--white);
+    padding:26px 18px;text-align:center;cursor:pointer;transition:border-color .18s,background .18s}
+  .drop:hover,.drop.on{border-color:var(--blue);background:#f0f7ff}
+  .drop .big{font-size:15px;font-weight:500}
+  .drop .small{font-size:12.5px;color:var(--sub);margin-top:6px}
+  .drop:focus-visible{outline:3px solid rgba(0,113,227,.5);outline-offset:3px}
+
+  .seg{display:flex;background:#e9e9ed;border-radius:11px;padding:2px}
+  .seg button{flex:1;border:0;background:transparent;font:inherit;font-size:13.5px;padding:8px 4px;
+    border-radius:9px;cursor:pointer;color:var(--ink);transition:background .16s,box-shadow .16s}
+  .seg button[aria-pressed="true"]{background:var(--white);box-shadow:0 1px 3px rgba(0,0,0,.14);font-weight:600}
+  .seg button:disabled{opacity:.35;cursor:default}
+  .seg button:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
+
+  textarea#cap{width:100%;border:1px solid var(--line);border-radius:12px;padding:11px 13px;
+    font:inherit;font-size:14px;resize:vertical;min-height:66px;background:var(--white);color:var(--ink)}
+  textarea#cap:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px rgba(0,113,227,.18)}
+
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:0;
+    border-radius:980px;font:inherit;font-size:15px;font-weight:500;padding:12px 22px;
+    cursor:pointer;transition:opacity .16s,background .16s;width:100%}
+  .btn:disabled{opacity:.42;cursor:default}
+  .btn-primary{background:var(--blue);color:#fff}
+  .btn-primary:hover:not(:disabled){background:#0077ed}
+  .btn-second{background:#e8e8ed;color:var(--ink);margin-top:9px}
+  .btn-second:hover:not(:disabled){background:#dedee4}
+  .btn-quiet{background:transparent;color:var(--blue);padding:6px}
+  .btn-quiet:hover{text-decoration:underline}
+  .btn:focus-visible{outline:3px solid rgba(0,113,227,.5);outline-offset:3px}
+
+  .check{display:flex;align-items:center;gap:9px;font-size:13.5px;cursor:pointer}
+  .check input{width:16px;height:16px;accent-color:var(--blue)}
+
+  .bar{height:4px;background:#e0e0e5;border-radius:99px;overflow:hidden;margin-top:12px;display:none}
+  .bar.on{display:block}
+  .bar i{display:block;height:100%;width:0;background:var(--blue);border-radius:99px;transition:width .2s}
+  .status{font-size:12.5px;color:var(--sub);margin-top:8px;min-height:1em;line-height:1.5}
+
+
+  .steps{max-width:760px;margin:0 auto;padding:80px 22px 96px}
+  .steps ol{margin:0;padding:0;list-style:none}
+  .steps li{display:flex;gap:18px;padding:22px 0;border-top:1px solid var(--line)}
+  .steps .n{flex:0 0 26px;font-size:14px;font-weight:600;color:var(--sub);line-height:1.6}
+  .steps .tx{flex:1 1 auto;min-width:0}
+  .steps b{display:block;font-size:16px;font-weight:600;margin-bottom:5px}
+  .steps p{margin:0;font-size:14.5px;color:var(--sub);line-height:1.62}
+
+  footer{background:var(--gray);color:var(--sub);font-size:12.5px;padding:26px 22px;text-align:center}
+
+  @media (max-width:900px){
+    .stage{grid-template-columns:1fr;gap:24px;padding-top:24px}
+    .panel{position:static}
+    .hero{padding:52px 22px 34px}
+    canvas#stage{max-height:56vh}
+  }
+</style>
+</head>
+<body>
+
+<nav class="nav"><b>my memory</b><span data-i18n="tag">초점이 맞는 순간을 GIF로</span></nav>
+
+<header class="hero">
+  <h1><span class="soft" data-i18n="h1a">아련했던 그날이</span><br><span data-i18n="h1b">다시, 또렷하게.</span></h1>
+  <p data-i18n="sub">사진을 올리면 뷰파인더가 그날을 한참 더듬다가 초점을 맞추고, 찰칵. 문장 한 줄까지 얹어 GIF로 간직하세요.</p>
+</header>
+
+<div class="stage-wrap">
+<section class="stage">
+  <div>
+    <div class="viewer">
+      <canvas id="stage" width="720" height="1300" hidden></canvas>
+      <div class="empty" id="empty">
+        <strong data-i18n="emptyTitle">뷰파인더가 비어 있습니다</strong>
+        <span data-i18n="emptyBody">오른쪽에서 사진을 올리거나<br>샘플로 먼저 확인해 보세요.</span>
+      </div>
+    </div>
+    <div class="outsize" id="outsize"></div>
+  </div>
+
+  <div class="panel">
+    <div class="field">
+      <div class="seg" id="segLang">
+        <button data-lang="ko" aria-pressed="true">한국어</button>
+        <button data-lang="en" aria-pressed="false">English</button>
+        <button data-lang="ja" aria-pressed="false">日本語</button>
+      </div>
+    </div>
+
+    <div class="field">
+      <h3 data-i18n="fPhoto">사진</h3>
+      <div class="drop" id="drop" tabindex="0" role="button">
+        <div class="big" id="dropTitle">사진 올리기</div>
+        <div class="small" data-i18n="dropSmall">끌어다 놓거나 붙여넣기(⌘V)도 됩니다</div>
+      </div>
+      <input type="file" id="file" accept="image/*" hidden>
+      <button class="btn btn-quiet" id="sample" data-i18n="sample">샘플 사진으로 보기</button>
+    </div>
+
+    <div class="field">
+      <h3 data-i18n="fCamera">카메라</h3>
+      <div class="seg" id="segCam">
+        <button data-cam="ios" aria-pressed="true">iPhone</button>
+        <button data-cam="galaxy" aria-pressed="false">Galaxy</button>
+        <button data-cam="dslr" aria-pressed="false" data-i18n="camDslr">카메라</button>
+      </div>
+      <div class="seg sub-row" id="segOri">
+        <button data-ori="p" aria-pressed="true" data-i18n="oriP">세로</button>
+        <button data-ori="l" aria-pressed="false" data-i18n="oriL">가로</button>
+      </div>
+      <p class="hint" id="camHint"></p>
+    </div>
+
+    <div class="field">
+      <h3 data-i18n="fCaption">자막</h3>
+      <textarea id="cap" rows="2"></textarea>
+      <div class="seg sub-row" id="segCapColor">
+        <button data-color="#ffffff" aria-pressed="true" data-i18n="capWhite">흰색</button>
+        <button data-color="#ffd60a" aria-pressed="false" data-i18n="capYellow">노란색</button>
+      </div>
+      <label class="check" style="margin-top:12px">
+        <input type="checkbox" id="capItalic"> <span data-i18n="capItalic">기울임</span>
+      </label>
+      <p class="hint" data-i18n="capHint">검정 테두리가 들어가 밝은 사진 위에서도 읽힙니다.</p>
+    </div>
+
+    <div class="field">
+      <h3 data-i18n="fSize">GIF 크기</h3>
+      <div class="seg" id="segSize">
+        <button data-scale="0.25" aria-pressed="false" data-i18n="szS">작게</button>
+        <button data-scale="0.36" aria-pressed="true" data-i18n="szM">보통</button>
+        <button data-scale="0.5" aria-pressed="false" data-i18n="szL">크게</button>
+      </div>
+      <label class="check" style="margin-top:14px">
+        <input type="checkbox" id="loop" checked> <span data-i18n="loopLbl">끝에서 다시 흐려지며 이어지게</span>
+      </label>
+    </div>
+
+    <div class="field">
+      <button class="btn btn-primary" id="save" disabled data-i18n="saveBtn">GIF로 저장</button>
+      <button class="btn btn-second" id="savePng" disabled data-i18n="pngBtn">완성 장면 PNG로 저장</button>
+      <div class="bar" id="bar"><i></i></div>
+      <div class="status" id="status"></div>
+      <button class="btn btn-quiet" id="replay" data-i18n="replayBtn">다시 재생</button>
+    </div>
+  </div>
+</section>
+</div>
+
+<section class="steps">
+  <ol>
+    <li><span class="n">1</span><div class="tx"><b data-i18n="s1t">사진을 올립니다</b>
+      <p data-i18n="s1b">브라우저 안에서만 처리합니다. 서버로 올라가지 않습니다.</p></div></li>
+    <li><span class="n">2</span><div class="tx"><b data-i18n="s2t">카메라와 자막을 고릅니다</b>
+      <p data-i18n="s2b">고르는 즉시 뷰파인더가 바뀝니다. 미리보기와 저장본은 같은 그림을 같은 박자로 그립니다.</p></div></li>
+    <li><span class="n">3</span><div class="tx"><b data-i18n="s3t">GIF로 저장합니다</b>
+      <p data-i18n="s3b">3.6초 분량 58장을 만들어 내려받습니다. 사진이 크면 10초쯤 걸립니다.</p></div></li>
+  </ol>
+</section>
+
+<footer data-i18n="footer">사진은 이 기기를 벗어나지 않습니다.</footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gif.js/0.2.0/gif.js"></script>
+<script>
+(() => {
+"use strict";
+
+/* ═══ 타이밍 ═════════════════════════════════════════ */
+const DUR   = 3600;
+const LOCK  = 1900;
+const SHUT  = 2450;
+const FPS   = 16;
+const NFRAMES = Math.round(DUR/1000*FPS);
+const FRAME   = DUR/NFRAMES;
+
+const STYLES = {
+  ios:     {w:720,  h:1300, hint:'아이폰 카메라 앱 화면. 노란 초점 사각형과 밝기 슬라이더가 따라옵니다.'},
+  iosL:    {w:1300, h:720,  hint:'아이폰을 옆으로 돌린 화면. 조작부가 오른쪽으로 옮겨 갑니다.'},
+  galaxy:  {w:720,  h:1300, hint:'원 UI 카메라. 배율 버튼, 모드 캐러셀, 링 셔터 버튼이 들어갑니다.'},
+  galaxyL: {w:1300, h:720,  hint:'갤럭시를 옆으로 돌린 화면. 배율 버튼과 셔터가 오른쪽에 섭니다.'},
+  dslr:    {w:1120, h:760,  hint:'접안렌즈 안쪽 시야. AF 포인트와 초록색 정보줄이 함께 움직입니다.'}
+};
+const ACC = {ios:'#ffd60a', galaxy:'#ffd400', dslr:'#ff3b30'};
+
+/* ═══ 언어 ══════════════════════════════════════════ */
+let LANG = 'ko';
+const I18N = {
+  ko:{
+    title:'my memory — 초점이 맞는 순간을 GIF로',
+    tag:'초점이 맞는 순간을 GIF로',
+    h1a:'아련했던 그날이', h1b:'다시, 또렷하게.',
+    sub:'사진을 올리면 뷰파인더가 그날을 한참 더듬다가 초점을 맞추고, 찰칵. 문장 한 줄까지 얹어 GIF로 간직하세요.',
+    emptyTitle:'뷰파인더가 비어 있습니다',
+    emptyBody:'오른쪽에서 사진을 올리거나<br>샘플로 먼저 확인해 보세요.',
+    fPhoto:'사진', dropNew:'사진 올리기', dropAgain:'다른 사진으로 바꾸기',
+    dropSmall:'끌어다 놓거나 붙여넣기(⌘V)도 됩니다', sample:'샘플 사진으로 보기',
+    fCamera:'카메라', camDslr:'카메라', oriP:'세로', oriL:'가로',
+    fCaption:'자막', capPh:'화면에 얹을 문장 (줄바꿈 가능)',
+    capWhite:'흰색', capYellow:'노란색', capItalic:'기울임',
+    capHint:'검정 테두리가 들어가 밝은 사진 위에서도 읽힙니다.',
+    fSize:'GIF 크기', szS:'작게', szM:'보통', szL:'크게',
+    loopLbl:'끝에서 다시 흐려지며 이어지게',
+    saveBtn:'GIF로 저장', pngBtn:'완성 장면 PNG로 저장', replayBtn:'다시 재생',
+    stPng:(w,h)=>`PNG를 저장했습니다 · ${w}×${h}`,
+    s1t:'사진을 올립니다', s1b:'브라우저 안에서만 처리합니다. 서버로 올라가지 않습니다.',
+    s2t:'카메라와 자막을 고릅니다', s2b:'고르는 즉시 뷰파인더가 바뀝니다. 미리보기와 저장본은 같은 그림을 같은 박자로 그립니다.',
+    s3t:'GIF로 저장합니다', s3b:'3.6초 분량 58장을 만들어 내려받습니다. 사진이 크면 10초쯤 걸립니다.',
+    footer:'사진은 이 기기를 벗어나지 않습니다.',
+    hints:{
+      ios:'아이폰 카메라 앱 화면. 노란 초점 사각형과 밝기 슬라이더가 따라옵니다.',
+      iosL:'아이폰을 옆으로 돌린 화면. 조작부가 오른쪽으로 옮겨 갑니다.',
+      galaxy:'원 UI 카메라. 배율 버튼, 모드 캐러셀, 링 셔터 버튼이 들어갑니다.',
+      galaxyL:'갤럭시를 옆으로 돌린 화면. 배율 버튼과 셔터가 오른쪽에 섭니다.',
+      dslr:'접안렌즈 안쪽 시야. AF 포인트와 초록색 정보줄이 함께 움직입니다.'
+    },
+    stDraw:'장면을 그리는 중…', stEncode:'GIF로 묶는 중…',
+    stDone:(w,h,mb)=>`저장했습니다 · ${w}×${h} · ${mb}MB`,
+    stErr:'만드는 중에 문제가 생겼습니다. 크기를 줄여 다시 시도해 보세요.',
+    stImg:'이미지 파일만 올릴 수 있습니다.',
+    stLib:'GIF 라이브러리를 불러오지 못했습니다. 새로고침 후 다시 시도하세요.',
+    out:(w,h)=>`저장 크기 ${w} × ${h}px · ${NFRAMES}장 · ${FPS}fps`,
+    cvVideo:'동영상', cvPhoto:'사진', cvPortrait:'인물',
+    cvRec:'기록 중', cvAfs:'AF-S 단일촬영'
+  },
+  en:{
+    title:'my memory — the moment focus lands, as a GIF',
+    tag:'the moment focus lands, as a GIF',
+    h1a:'That hazy day,', h1b:'in focus again.',
+    sub:'Drop in a photo and the viewfinder hunts for it, settles, and clicks. Add a line of your own and keep the whole thing as a GIF.',
+    emptyTitle:'The viewfinder is empty',
+    emptyBody:'Add a photo on the right,<br>or try the sample first.',
+    fPhoto:'Photo', dropNew:'Add a photo', dropAgain:'Choose a different photo',
+    dropSmall:'Drag and drop, or paste (⌘V)', sample:'Try the sample photo',
+    fCamera:'Camera', camDslr:'Camera', oriP:'Portrait', oriL:'Landscape',
+    fCaption:'Caption', capPh:'A line to lay over the frame (line breaks work)',
+    capWhite:'White', capYellow:'Yellow', capItalic:'Slanted',
+    capHint:'A black outline keeps it readable over bright photos.',
+    fSize:'GIF size', szS:'Small', szM:'Medium', szL:'Large',
+    loopLbl:'Blur again at the end so it loops',
+    saveBtn:'Save as GIF', pngBtn:'Save the final frame as PNG', replayBtn:'Play again',
+    stPng:(w,h)=>`PNG saved · ${w}×${h}`,
+    s1t:'Add a photo', s1b:'Everything happens in your browser. Nothing is uploaded.',
+    s2t:'Pick a camera and a caption', s2b:'The viewfinder changes as you pick. The preview and the saved file draw the same frames at the same pace.',
+    s3t:'Save as a GIF', s3b:'58 frames covering 3.6 seconds are built and downloaded. Large photos take about ten seconds.',
+    footer:'Your photos never leave this device.',
+    hints:{
+      ios:'The iPhone camera app. A yellow focus square and a brightness slider follow the shot.',
+      iosL:'The iPhone turned sideways. The controls move over to the right.',
+      galaxy:'One UI camera, with zoom pills, the mode carousel and a ringed shutter.',
+      galaxyL:'The Galaxy turned sideways. Zoom and shutter stand on the right.',
+      dslr:'The view through the eyepiece. AF points and a green info bar move with the shot.'
+    },
+    stDraw:'Drawing the frames…', stEncode:'Packing the GIF…',
+    stDone:(w,h,mb)=>`Saved · ${w}×${h} · ${mb}MB`,
+    stErr:'Something went wrong. Try a smaller size.',
+    stImg:'Only image files can be added.',
+    stLib:'The GIF library did not load. Reload the page and try again.',
+    out:(w,h)=>`Output ${w} × ${h}px · ${NFRAMES} frames · ${FPS}fps`,
+    cvVideo:'VIDEO', cvPhoto:'PHOTO', cvPortrait:'PORTRAIT',
+    cvRec:'RECORDING', cvAfs:'AF-S SINGLE'
+  },
+  ja:{
+    title:'my memory — ピントが合う瞬間をGIFに',
+    tag:'ピントが合う瞬間をGIFに',
+    h1a:'かすんでいたあの日が', h1b:'もう一度、くっきりと。',
+    sub:'写真を選ぶと、ファインダーがその日を手探りしてピントを合わせ、カシャ。ひとこと添えて、まるごとGIFで残せます。',
+    emptyTitle:'ファインダーが空です',
+    emptyBody:'右から写真を追加するか、<br>まずはサンプルでお試しください。',
+    fPhoto:'写真', dropNew:'写真を追加', dropAgain:'別の写真に変える',
+    dropSmall:'ドラッグ＆ドロップや貼り付け（⌘V）もできます', sample:'サンプル写真で見る',
+    fCamera:'カメラ', camDslr:'カメラ', oriP:'縦', oriL:'横',
+    fCaption:'字幕', capPh:'画面に重ねる文（改行できます）',
+    capWhite:'白', capYellow:'黄色', capItalic:'斜体',
+    capHint:'黒い縁取りが入るので、明るい写真の上でも読めます。',
+    fSize:'GIFのサイズ', szS:'小', szM:'中', szL:'大',
+    loopLbl:'最後にまたぼかしてループさせる',
+    saveBtn:'GIFで保存', pngBtn:'完成した場面をPNGで保存', replayBtn:'もう一度再生',
+    stPng:(w,h)=>`PNGを保存しました・${w}×${h}`,
+    s1t:'写真を追加します', s1b:'すべてブラウザーの中で処理します。サーバーには送られません。',
+    s2t:'カメラと字幕を選びます', s2b:'選ぶとすぐファインダーが変わります。プレビューと保存されるGIFは、同じ絵を同じテンポで描きます。',
+    s3t:'GIFで保存します', s3b:'3.6秒ぶん58枚を作って書き出します。写真が大きいと10秒ほどかかります。',
+    footer:'写真がこの端末から出ることはありません。',
+    hints:{
+      ios:'iPhoneのカメラ画面。黄色いフォーカス枠と明るさスライダーが付いてきます。',
+      iosL:'iPhoneを横にした画面。操作部が右側へ移ります。',
+      galaxy:'One UIのカメラ。ズームボタン、モードの並び、リング付きシャッター。',
+      galaxyL:'Galaxyを横にした画面。ズームとシャッターが右に立ちます。',
+      dslr:'接眼レンズ越しの視界。AFポイントと緑の情報バーが一緒に動きます。'
+    },
+    stDraw:'場面を描いています…', stEncode:'GIFにまとめています…',
+    stDone:(w,h,mb)=>`保存しました・${w}×${h}・${mb}MB`,
+    stErr:'作成中に問題が起きました。サイズを小さくしてお試しください。',
+    stImg:'画像ファイルのみ追加できます。',
+    stLib:'GIFライブラリを読み込めませんでした。再読み込みしてお試しください。',
+    out:(w,h)=>`書き出し ${w} × ${h}px ・${NFRAMES}枚・${FPS}fps`,
+    cvVideo:'ビデオ', cvPhoto:'写真', cvPortrait:'ポートレート',
+    cvRec:'記録中', cvAfs:'AF-S 1コマ'
+  }
+};
+const T = () => I18N[LANG];
+const FF  = '-apple-system, "Apple SD Gothic Neo", "Malgun Gothic", "Hiragino Sans", "Yu Gothic", Meiryo, sans-serif';
+/* 자막 전용 — 굴림 (없는 기기에서는 비슷한 고딕으로 대체) */
+const CAP_FF = '"굴림", Gulim, GulimChe, "돋움", Dotum, "MS PGothic", "Hiragino Kaku Gothic ProN", "Malgun Gothic", "Apple SD Gothic Neo", sans-serif';
+
+/* 자막 상태 — 미리보기와 GIF가 같은 값을 읽습니다 */
+const CAP = {text:'', color:'#ffffff', italic:false};
+
+/* ═══ 보간 ═══════════════════════════════════════════ */
+const sm = p => {p = Math.min(1, Math.max(0, p)); return p*p*(3-2*p);};
+function kf(keys, t){
+  if (t <= keys[0][0]) return keys[0][1];
+  for (let i=1;i<keys.length;i++){
+    if (t <= keys[i][0]){
+      const [a,va]=keys[i-1], [b,vb]=keys[i];
+      return va + (vb-va)*sm((t-a)/(b-a));
+    }
+  }
+  return keys[keys.length-1][1];
+}
+
+/* ═══ 타임라인 ═══════════════════════════════════════ */
+function tl(t, loop){
+  let blur = kf([[0,32],[420,18],[780,28],[1180,11],[1520,16],[LOCK,0.4],[2060,1.8],[2210,0]], t);
+  let amp  = kf([[0,13],[1250,9.5],[LOCK,3],[2320,1],[DUR,1]], t);
+  let zoom = kf([[0,1.07],[LOCK,1.012],[SHUT,1.008],[SHUT+60,1.03],[SHUT+430,1.0],[DUR,1.0]], t);
+
+  if (loop && t > DUR-320){
+    const p = sm((t-(DUR-320))/320);
+    blur += (32-blur)*p; amp += (13-amp)*p; zoom += (1.07-zoom)*p;
+  }
+
+  /* 흔들림: 느리게 — 주기를 길게 잡았습니다 */
+  const sx = amp * (Math.sin(t/232) + 0.58*Math.sin(t/103+1.2) + 0.26*Math.sin(t/61+2.6));
+  const sy = amp * (Math.cos(t/198) + 0.52*Math.sin(t/127+0.4) + 0.24*Math.cos(t/72+1.1));
+
+  const hunt   = t < LOCK;
+  const seek   = sm((t-1180)/700);
+  const locked = t >= LOCK;
+  const pulse  = (t>=LOCK && t<LOCK+300) ? 1-((t-LOCK)/300) : 0;
+  const bright = hunt ? 1 + 0.045*Math.sin(t/168) : 1;
+
+  let curtain = 0;
+  if (t >= SHUT && t < SHUT+80)          curtain = (t-SHUT)/80;
+  else if (t >= SHUT+80 && t < SHUT+180) curtain = 1-(t-SHUT-80)/100;
+  const flash = (t>=SHUT-20 && t<SHUT+80) ? 0.9*(1-(t-SHUT+20)/100) : 0;
+  const press = (t>=SHUT-70 && t<SHUT+130) ? 1-Math.abs((t-SHUT+70)/200-0.5)*2 : 0;
+  const shot  = t >= SHUT+140;
+  const thumb = shot ? sm((t-SHUT-140)/340) : 0;
+
+  return {blur,sx,sy,zoom,hunt,seek,locked,pulse,bright,curtain,flash,press,shot,thumb,t};
+}
+
+/* ═══ 그리기 유틸 ════════════════════════════════════ */
+const CAN_FILTER = (() => {
+  const c = document.createElement('canvas').getContext('2d');
+  c.filter = 'blur(2px)';
+  return c.filter === 'blur(2px)';
+})();
+const tmp = document.createElement('canvas');
+const tctx = tmp.getContext('2d');
+
+function rrPath(c,x,y,w,h,r){
+  r = Math.min(r, w/2, h/2);
+  c.moveTo(x+r,y);
+  c.arcTo(x+w,y,x+w,y+h,r); c.arcTo(x+w,y+h,x,y+h,r);
+  c.arcTo(x,y+h,x,y,r);     c.arcTo(x,y,x+w,y,r);
+  c.closePath();
+}
+function rr(c,x,y,w,h,r){ c.beginPath(); rrPath(c,x,y,w,h,r); }
+
+function drawPhoto(c, src, x, y, w, h, st){
+  c.save();
+  c.beginPath(); c.rect(x,y,w,h); c.clip();
+  c.fillStyle = '#0a0a0c'; c.fillRect(x,y,w,h);
+
+  const over = 1 + st.blur/90 + 0.06;
+  const dw = w*st.zoom*over, dh = h*st.zoom*over;
+  const s  = Math.max(dw/src.width, dh/src.height);
+  const iw = src.width*s, ih = src.height*s;
+  const ix = x + w/2 - iw/2 + st.sx;
+  const iy = y + h/2 - ih/2 + st.sy;
+
+  if (st.blur > 0.35){
+    if (CAN_FILTER){
+      c.filter = `blur(${st.blur.toFixed(2)}px) brightness(${st.bright.toFixed(3)})`;
+      c.drawImage(src, ix, iy, iw, ih);
+      c.filter = 'none';
+    } else {
+      const k = Math.min(14, Math.max(1, st.blur/1.6));
+      tmp.width = Math.max(2, Math.round(iw/k));
+      tmp.height= Math.max(2, Math.round(ih/k));
+      tctx.clearRect(0,0,tmp.width,tmp.height);
+      tctx.drawImage(src,0,0,tmp.width,tmp.height);
+      c.imageSmoothingQuality = 'high';
+      c.drawImage(tmp, ix, iy, iw, ih);
+    }
+  } else {
+    if (CAN_FILTER && st.bright !== 1) c.filter = `brightness(${st.bright.toFixed(3)})`;
+    c.drawImage(src, ix, iy, iw, ih);
+    c.filter = 'none';
+  }
+  c.restore();
+}
+
+function shutterFx(c, x, y, w, h, st){
+  if (st.flash > 0){ c.fillStyle = `rgba(255,255,255,${st.flash})`; c.fillRect(x,y,w,h); }
+  if (st.curtain > 0){
+    const b = h/2 * st.curtain;
+    c.fillStyle = '#000';
+    c.fillRect(x, y, w, b+1);
+    c.fillRect(x, y+h-b-1, w, b+1);
+  }
+}
+
+function miniPhoto(c, src, x, y, w, h, r){
+  c.save(); rr(c,x,y,w,h,r); c.clip();
+  const s = Math.max(w/src.width, h/src.height);
+  c.drawImage(src, x+w/2-src.width*s/2, y+h/2-src.height*s/2, src.width*s, src.height*s);
+  c.restore();
+}
+
+function label(c, text, x, y, size, weight, color, align='center'){
+  c.fillStyle = color; c.textAlign = align; c.textBaseline = 'middle';
+  c.font = `${weight} ${size}px ${FF}`;
+  c.fillText(text, x, y);
+}
+function vlabel(c, text, x, y, size, weight, color){   /* 세로(가로모드)용 */
+  c.save(); c.translate(x,y); c.rotate(-Math.PI/2);
+  label(c, text, 0, 0, size, weight, color); c.restore();
+}
+
+function modeItems(c, size){
+  const items=[T().cvVideo, T().cvPhoto, T().cvPortrait];
+  const wts=['500','700','500'];
+  const w=items.map((t,i)=>{ c.font=`${wts[i]} ${size}px ${FF}`; return c.measureText(t).width; });
+  const gap=size*1.45;
+  return {items, w, gap, total:w[0]+w[1]+w[2]+gap*2};
+}
+function modeRow(c, cx, y, size, active, dim, dot){
+  const m=modeItems(c,size);
+  let x=cx-m.total/2; const pos=[];
+  for(let i=0;i<3;i++){ pos.push(x+m.w[i]/2); x+=m.w[i]+m.gap; }
+  label(c,m.items[0],pos[0],y,size,'500',dim);
+  label(c,m.items[1],pos[1],y,size,'700',active);
+  label(c,m.items[2],pos[2],y,size,'500',dim);
+  if(dot){ c.fillStyle=active; c.beginPath(); c.arc(pos[1],y+size*0.82,3.4,0,7); c.fill(); }
+}
+function modeCol(c, x, cy, size, active, dim, dot){
+  const m=modeItems(c,size);
+  let y=cy+m.total/2; const pos=[];
+  for(let i=0;i<3;i++){ pos.push(y-m.w[i]/2); y-=m.w[i]+m.gap; }
+  vlabel(c,m.items[0],x,pos[0],size,'500',dim);
+  vlabel(c,m.items[1],x,pos[1],size,'700',active);
+  vlabel(c,m.items[2],x,pos[2],size,'500',dim);
+  if(dot){ c.fillStyle=active; c.beginPath(); c.arc(x+size,pos[1],3.4,0,7); c.fill(); }
+}
+
+function bolt(c,x,y,s,color,rot){
+  c.save(); c.translate(x,y); if(rot) c.rotate(rot);
+  c.fillStyle = color; c.beginPath();
+  c.moveTo(s*.15,-s); c.lineTo(-s*.5,s*.12); c.lineTo(-s*.05,s*.12);
+  c.lineTo(-s*.2,s); c.lineTo(s*.5,-s*.16); c.lineTo(s*.02,-s*.16);
+  c.closePath(); c.fill(); c.restore();
+}
+
+function reticle(c, cx, cy, size, color, alpha, corners){
+  c.save(); c.globalAlpha = alpha; c.strokeStyle = color; c.lineWidth = 2.4;
+  const h = size/2;
+  if (corners){
+    c.globalAlpha = alpha*0.4; rr(c, cx-h, cy-h, size, size, 4); c.stroke();
+    c.globalAlpha = alpha;
+    const o = 7, t = size*0.22, H = h+o;
+    c.lineWidth = 5; c.lineCap = 'round';
+    [[-1,-1],[1,-1],[-1,1],[1,1]].forEach(([dx,dy])=>{
+      c.beginPath();
+      c.moveTo(cx+dx*H, cy+dy*H - dy*t); c.lineTo(cx+dx*H, cy+dy*H);
+      c.lineTo(cx+dx*H - dx*t, cy+dy*H); c.stroke();
+    });
+  } else { rr(c, cx-h, cy-h, size, size, 4); c.stroke(); }
+  c.restore();
+}
+
+function sunSlider(c, x, cy, alpha, color, scale){
+  const s = scale||1;
+  c.save(); c.globalAlpha = alpha; c.strokeStyle = color; c.fillStyle = color; c.lineWidth = 2.4*s;
+  c.beginPath(); c.moveTo(x, cy-38*s); c.lineTo(x, cy+62*s); c.stroke();
+  c.beginPath(); c.arc(x, cy-16*s, 9*s, 0, 7); c.fill();
+  for (let i=0;i<8;i++){
+    const a = i*Math.PI/4;
+    c.beginPath();
+    c.moveTo(x+Math.cos(a)*13*s, cy-16*s+Math.sin(a)*13*s);
+    c.lineTo(x+Math.cos(a)*19*s, cy-16*s+Math.sin(a)*19*s);
+    c.stroke();
+  }
+  c.restore();
+}
+
+/* ═══ 자막 ══════════════════════════════════════════ */
+const capCv = document.createElement('canvas');
+const capCtx = capCv.getContext('2d');
+
+function paintCaption(c, x, y, w, h, inset){
+  const raw = CAP.text.replace(/\r/g,'');
+  const lines = raw.split('\n').filter(l => l.trim() !== '');
+  if (!lines.length) return;
+
+  const size = Math.round(Math.min(w,h)*0.055);
+  const lh   = size*1.34;
+  const bottom = y + h - (inset != null ? inset : h*0.075);
+  const first  = bottom - (lines.length-1)*lh;
+
+  c.save();
+  c.beginPath(); c.rect(x,y,w,h); c.clip();
+  c.textAlign = 'center'; c.textBaseline = 'alphabetic';
+  c.font = `700 ${size}px ${CAP_FF}`;
+  c.lineJoin = 'round'; c.lineCap = 'round'; c.miterLimit = 2;
+  c.strokeStyle = '#000'; c.lineWidth = Math.max(3, size*0.22);
+  c.shadowColor = 'rgba(0,0,0,.45)'; c.shadowBlur = size*0.28;
+
+  lines.forEach((ln,i) => {
+    const ty = first + i*lh;
+    c.save();
+    c.translate(x + w/2, ty);
+    if (CAP.italic) c.transform(1,0,-0.2,1,0,0);
+    c.strokeText(ln, 0, 0);
+    c.shadowColor = 'transparent';
+    c.fillStyle = CAP.color;
+    c.fillText(ln, 0, 0);
+    c.restore();
+  });
+  c.restore();
+}
+
+/* 화면이 흐릴 때는 자막도 같이 흐려집니다 */
+function drawCaption(c, x, y, w, h, inset, blur){
+  if (!CAP.text.trim()) return;
+  const b = blur || 0;
+  if (b <= 0.35){ paintCaption(c, x, y, w, h, inset); return; }
+
+  if (CAN_FILTER){
+    c.save();
+    c.filter = `blur(${b.toFixed(2)}px)`;
+    paintCaption(c, x, y, w, h, inset);
+    c.restore();
+  } else {
+    capCv.width = Math.round(w); capCv.height = Math.round(h);
+    capCtx.setTransform(1,0,0,1,0,0);
+    capCtx.clearRect(0,0,capCv.width,capCv.height);
+    paintCaption(capCtx, 0, 0, w, h, inset);
+    const k = Math.min(14, Math.max(1, b/1.6));
+    tmp.width  = Math.max(2, Math.round(w/k));
+    tmp.height = Math.max(2, Math.round(h/k));
+    tctx.clearRect(0,0,tmp.width,tmp.height);
+    tctx.drawImage(capCv,0,0,tmp.width,tmp.height);
+    c.save(); c.imageSmoothingQuality='high';
+    c.drawImage(tmp, x, y, w, h); c.restore();
+  }
+}
+
+/* ═══ iPhone ════════════════════════════════════════ */
+function drawIOS(c, S, src, st, land){
+  const W=S.w, H=S.h;
+  c.fillStyle='#000'; c.fillRect(0,0,W,H);
+
+  const P = land ? {x:130,y:0,w:960,h:720} : {x:0,y:170,w:720,h:960};
+  drawPhoto(c, src, P.x, P.y, P.w, P.h, st);
+
+  /* 초점 사각형 */
+  const fcx = P.x+P.w/2 + st.sx*0.35;
+  const fcy = P.y+P.h/2 + st.sy*0.35 - (land?20:40);
+  if (!st.shot){
+    const size = (land?128:150) - (land?52:62)*st.seek + st.pulse*10;
+    const al = st.locked ? (0.55+0.45*st.pulse) : (0.75+0.25*Math.sin(st.t/150));
+    reticle(c, fcx, fcy, size, ACC.ios, al, false);
+    sunSlider(c, fcx+size/2+20, fcy, al, ACC.ios, land?0.85:1);
+  }
+
+  shutterFx(c, P.x, P.y, P.w, P.h, st);
+  drawCaption(c, P.x, P.y, P.w, P.h, P.h*0.075, st.blur);
+
+  if (!land){
+    /* 상단 바 */
+    bolt(c, 76, 92, 17, st.hunt ? '#8e8e93' : '#ffffff');
+    c.save(); c.translate(360,92); c.strokeStyle='#fff'; c.lineWidth=3;
+    c.beginPath(); c.arc(0,0,15,0,7); c.stroke();
+    c.setLineDash([3,5]); c.beginPath(); c.arc(0,0,22,0,7); c.stroke(); c.restore();
+    c.strokeStyle='#fff'; c.lineWidth=4; c.lineCap='round';
+    c.beginPath(); c.moveTo(632,98); c.lineTo(650,80); c.lineTo(668,98); c.stroke(); c.lineCap='butt';
+
+    /* 모드 + 셔터 */
+    modeRow(c, 360, 1176, 28, ACC.ios, '#9b9b9f', true);
+
+    const cy=1252, k=1-st.press*0.12;
+    c.strokeStyle='#fff'; c.lineWidth=5;
+    c.beginPath(); c.arc(360,cy,44,0,7); c.stroke();
+    c.fillStyle = st.press>0.5 ? '#d9d9dd' : '#fff';
+    c.beginPath(); c.arc(360,cy,35*k,0,7); c.fill();
+
+    if (st.thumb>0){
+      const s=62*(0.7+0.3*st.thumb);
+      c.save(); c.globalAlpha=st.thumb;
+      miniPhoto(c, src, 96-s/2, cy-s/2, s, s, 9);
+      c.strokeStyle='rgba(255,255,255,.5)'; c.lineWidth=2; rr(c,96-s/2,cy-s/2,s,s,9); c.stroke();
+      c.restore();
+    } else { c.strokeStyle='#3a3a3c'; c.lineWidth=2; rr(c,65,cy-31,62,62,9); c.stroke(); }
+
+    c.fillStyle='#2c2c2e'; c.beginPath(); c.arc(624,cy,29,0,7); c.fill();
+    c.strokeStyle='#fff'; c.lineWidth=3;
+    c.beginPath(); c.arc(624,cy,12,0.6,4.6); c.stroke();
+    c.beginPath(); c.moveTo(633,cy-13); c.lineTo(637,cy-4); c.lineTo(628,cy-2);
+    c.closePath(); c.fillStyle='#fff'; c.fill();
+  } else {
+    /* 왼쪽 아이콘 줄 */
+    bolt(c, 65, 120, 17, st.hunt ? '#8e8e93' : '#ffffff', -Math.PI/2);
+    c.save(); c.translate(65,360); c.strokeStyle='#fff'; c.lineWidth=3;
+    c.beginPath(); c.arc(0,0,15,0,7); c.stroke();
+    c.setLineDash([3,5]); c.beginPath(); c.arc(0,0,22,0,7); c.stroke(); c.restore();
+    c.save(); c.translate(65,600); c.rotate(-Math.PI/2);
+    c.strokeStyle='#fff'; c.lineWidth=4; c.lineCap='round';
+    c.beginPath(); c.moveTo(-18,9); c.lineTo(0,-9); c.lineTo(18,9); c.stroke();
+    c.lineCap='butt'; c.restore();
+
+    /* 오른쪽 조작부 */
+    const cx=1200;
+    modeCol(c, 1112, 360, 26, ACC.ios, '#9b9b9f', true);
+
+    const k=1-st.press*0.12;
+    c.strokeStyle='#fff'; c.lineWidth=5;
+    c.beginPath(); c.arc(cx,360,44,0,7); c.stroke();
+    c.fillStyle = st.press>0.5 ? '#d9d9dd' : '#fff';
+    c.beginPath(); c.arc(cx,360,35*k,0,7); c.fill();
+
+    if (st.thumb>0){
+      const s=58*(0.7+0.3*st.thumb);
+      c.save(); c.globalAlpha=st.thumb;
+      miniPhoto(c, src, cx-s/2, 150-s/2, s, s, 9);
+      c.strokeStyle='rgba(255,255,255,.5)'; c.lineWidth=2; rr(c,cx-s/2,150-s/2,s,s,9); c.stroke();
+      c.restore();
+    } else { c.strokeStyle='#3a3a3c'; c.lineWidth=2; rr(c,cx-29,121,58,58,9); c.stroke(); }
+
+    c.fillStyle='#2c2c2e'; c.beginPath(); c.arc(cx,570,29,0,7); c.fill();
+    c.strokeStyle='#fff'; c.lineWidth=3;
+    c.beginPath(); c.arc(cx,570,12,0.6,4.6); c.stroke();
+    c.beginPath(); c.moveTo(cx+9,557); c.lineTo(cx+13,566); c.lineTo(cx+4,568);
+    c.closePath(); c.fillStyle='#fff'; c.fill();
+  }
+}
+
+/* ═══ Galaxy ════════════════════════════════════════ */
+function galaxyIcons(c, pts, vertical){
+  const [g,b,t,r,f] = pts;
+  c.save(); c.strokeStyle='#e9e9ea'; c.lineWidth=3; c.lineCap='round';
+  c.beginPath(); c.arc(g[0],g[1],13,0,7); c.stroke();
+  for (let i=0;i<6;i++){ const a=i*Math.PI/3;
+    c.beginPath(); c.moveTo(g[0]+Math.cos(a)*13,g[1]+Math.sin(a)*13);
+    c.lineTo(g[0]+Math.cos(a)*20,g[1]+Math.sin(a)*20); c.stroke(); }
+  c.restore();
+  bolt(c, b[0], b[1], 16, '#e9e9ea', vertical?-Math.PI/2:0);
+  c.strokeStyle='#e9e9ea'; c.lineWidth=3;
+  c.beginPath(); c.arc(t[0],t[1],15,0,7); c.stroke();
+  c.beginPath(); c.moveTo(t[0],t[1]-8); c.lineTo(t[0],t[1]+1); c.lineTo(t[0]+7,t[1]+1); c.stroke();
+  c.lineWidth=3; rr(c,r[0]-14,r[1]-17,28,34,4); c.stroke();
+  label(c,'3:4', r[0], r[1], 15,'700','#e9e9ea');
+  c.beginPath(); c.arc(f[0],f[1],15,0,7); c.stroke();
+  c.beginPath(); c.arc(f[0],f[1],7,0,7); c.stroke();
+}
+
+function drawGalaxy(c, S, src, st, land){
+  const W=S.w, H=S.h;
+  c.fillStyle='#000'; c.fillRect(0,0,W,H);
+  const P = land ? {x:130,y:0,w:960,h:720} : {x:0,y:176,w:720,h:960};
+
+  c.save(); rr(c,P.x,P.y,P.w,P.h,26); c.clip();
+  drawPhoto(c, src, P.x, P.y, P.w, P.h, st);
+
+  const fcx = P.x+P.w/2 + st.sx*0.3, fcy = P.y+P.h/2 + st.sy*0.3 - (land?16:30);
+  if (!st.shot){
+    const size = (land?142:168) - (land?52:62)*st.seek + st.pulse*12;
+    const al = st.locked ? (0.6+0.4*st.pulse) : (0.8+0.2*Math.sin(st.t/140));
+    reticle(c, fcx, fcy, size, st.locked ? ACC.galaxy : '#ffffff', al, true);
+    const sx0 = fcx + size/2 + 26;
+    c.save(); c.globalAlpha=al;
+    c.fillStyle='rgba(0,0,0,.35)'; rr(c,sx0-13,fcy-56,26,112,13); c.fill();
+    c.fillStyle=ACC.galaxy; c.beginPath(); c.arc(sx0,fcy-16,10,0,7); c.fill();
+    c.restore();
+  }
+
+  /* 배율 알약 */
+  c.save();
+  if (land){ c.translate(P.x+P.w-64, P.y+P.h/2); c.rotate(-Math.PI/2); }
+  else     { c.translate(P.x+P.w/2, P.y+P.h-58); }
+  c.fillStyle='rgba(0,0,0,.42)'; rr(c,-106,-25,212,50,25); c.fill();
+  label(c,'.5', -64, 0, 22,'600','#e6e6e6');
+  c.fillStyle=ACC.galaxy; c.beginPath(); c.arc(0,0,21,0,7); c.fill();
+  label(c,'1x', 0, 0, 22,'700','#1a1a1a');
+  label(c,'3',  64, 0, 22,'600','#e6e6e6');
+  c.restore();
+
+  shutterFx(c, P.x, P.y, P.w, P.h, st);
+  drawCaption(c, P.x, P.y, P.w, P.h, land ? P.h*0.075 : P.h*0.16, st.blur);
+  c.restore();
+
+  if (!land){
+    galaxyIcons(c, [[96,96],[246,96],[396,96],[546,96],[650,96]], false);
+    modeRow(c, 360, 1186, 27, ACC.galaxy, '#9a9a9e', false);
+
+    const cy=1252, k=1-st.press*0.14;
+    c.strokeStyle='#fff'; c.lineWidth=6;
+    c.beginPath(); c.arc(360,cy,46,0,7); c.stroke();
+    c.fillStyle= st.press>0.5 ? '#dcdcdc' : '#fff';
+    c.beginPath(); c.arc(360,cy,34*k,0,7); c.fill();
+
+    if (st.thumb>0){
+      const s=64*(0.7+0.3*st.thumb);
+      c.save(); c.globalAlpha=st.thumb; miniPhoto(c, src, 100-s/2, cy-s/2, s, s, s/2); c.restore();
+    } else { c.strokeStyle='#3a3a3c'; c.lineWidth=2; c.beginPath(); c.arc(100,cy,32,0,7); c.stroke(); }
+
+    c.fillStyle='#2b2b2d'; c.beginPath(); c.arc(620,cy,32,0,7); c.fill();
+    c.strokeStyle='#fff'; c.lineWidth=3;
+    c.beginPath(); c.arc(620,cy,13,0.5,4.5); c.stroke();
+    c.beginPath(); c.moveTo(630,cy-14); c.lineTo(634,cy-4); c.lineTo(625,cy-3);
+    c.closePath(); c.fillStyle='#fff'; c.fill();
+  } else {
+    galaxyIcons(c, [[65,100],[65,240],[65,380],[65,520],[65,640]], true);
+    const cx=1200;
+    modeCol(c, 1112, 360, 26, ACC.galaxy, '#9a9a9e', false);
+
+    const k=1-st.press*0.14;
+    c.strokeStyle='#fff'; c.lineWidth=6;
+    c.beginPath(); c.arc(cx,360,46,0,7); c.stroke();
+    c.fillStyle= st.press>0.5 ? '#dcdcdc' : '#fff';
+    c.beginPath(); c.arc(cx,360,34*k,0,7); c.fill();
+
+    if (st.thumb>0){
+      const s=60*(0.7+0.3*st.thumb);
+      c.save(); c.globalAlpha=st.thumb; miniPhoto(c, src, cx-s/2, 150-s/2, s, s, s/2); c.restore();
+    } else { c.strokeStyle='#3a3a3c'; c.lineWidth=2; c.beginPath(); c.arc(cx,150,30,0,7); c.stroke(); }
+
+    c.fillStyle='#2b2b2d'; c.beginPath(); c.arc(cx,570,30,0,7); c.fill();
+    c.strokeStyle='#fff'; c.lineWidth=3;
+    c.beginPath(); c.arc(cx,570,13,0.5,4.5); c.stroke();
+    c.beginPath(); c.moveTo(cx+10,556); c.lineTo(cx+14,566); c.lineTo(cx+5,567);
+    c.closePath(); c.fillStyle='#fff'; c.fill();
+  }
+}
+
+/* ═══ 카메라(광학 뷰파인더) ═══════════════════════════════════ */
+function drawDSLR(c, S, src, st){
+  const W=S.w, H=S.h, PX=118, PY=72, PW=884, PH=552;
+  c.fillStyle='#0b0b0d'; c.fillRect(0,0,W,H);
+  drawPhoto(c, src, PX, PY, PW, PH, st);
+
+  c.save(); c.globalAlpha=.22; c.strokeStyle='#fff'; c.lineWidth=1;
+  for (let i=1;i<3;i++){
+    c.beginPath(); c.moveTo(PX+PW*i/3,PY); c.lineTo(PX+PW*i/3,PY+PH); c.stroke();
+    c.beginPath(); c.moveTo(PX,PY+PH*i/3); c.lineTo(PX+PW,PY+PH*i/3); c.stroke();
+  }
+  c.restore();
+
+  const ccx=PX+PW/2, ccy=PY+PH/2;
+  [-2,-1,0,1,2].forEach(i=>[-1,0,1].forEach(j=>{
+    const x=ccx+i*112, y=ccy+j*104, w=34, h=24, mid=(i===0&&j===0);
+    c.save();
+    if (mid && st.locked){
+      c.globalAlpha = 0.55+0.45*st.pulse;
+      c.fillStyle = ACC.dslr; rr(c,x-w/2,y-h/2,w,h,3); c.fill();
+      c.strokeStyle = '#fff'; c.lineWidth = 1.6; rr(c,x-w/2,y-h/2,w,h,3); c.stroke();
+    } else if (mid && st.hunt){
+      c.globalAlpha = 0.35+0.4*Math.abs(Math.sin(st.t/240));
+      c.strokeStyle = '#fff'; c.lineWidth = 2.4; rr(c,x-w/2,y-h/2,w,h,3); c.stroke();
+    } else {
+      c.globalAlpha = .5; c.strokeStyle='#e8e8e8'; c.lineWidth=1.4;
+      rr(c,x-w/2,y-h/2,w,h,3); c.stroke();
+    }
+    c.restore();
+  }));
+  c.save(); c.globalAlpha=.4; c.strokeStyle='#fff'; c.lineWidth=1.4;
+  c.beginPath(); c.arc(ccx,ccy,74,0,7); c.stroke(); c.restore();
+
+  shutterFx(c, PX, PY, PW, PH, st);
+
+  const g = c.createRadialGradient(ccx,ccy,PH*0.34,ccx,ccy,PW*0.72);
+  g.addColorStop(0,'rgba(0,0,0,0)'); g.addColorStop(1,'rgba(0,0,0,.82)');
+  c.fillStyle=g; c.fillRect(PX,PY,PW,PH);
+
+  drawCaption(c, PX, PY, PW, PH, PH*0.09, st.blur);
+
+  c.save();
+  c.beginPath(); c.rect(0,0,W,H); rrPath(c,PX,PY,PW,PH,10);
+  c.fillStyle='#0b0b0d'; c.fill('evenodd');
+  c.restore();
+  c.strokeStyle='#26262a'; c.lineWidth=2; rr(c,PX-1,PY-1,PW+2,PH+2,11); c.stroke();
+
+  const G = st.locked ? '#39ff6a' : '#1f8a3c';
+  const by = 672;
+  c.fillStyle='#000'; c.fillRect(PX,by-26,PW,52);
+  c.save();
+  c.globalAlpha = st.locked ? (0.7+0.3*st.pulse) : (0.25+0.25*Math.abs(Math.sin(st.t/240)));
+  c.fillStyle = st.locked ? '#39ff6a' : '#2f5f3a';
+  c.beginPath(); c.arc(PX+34,by,9,0,7); c.fill(); c.restore();
+
+  c.font = '600 26px "SF Mono", ui-monospace, Menlo, monospace';
+  c.textBaseline='middle'; c.textAlign='left'; c.fillStyle=G;
+  c.fillText('1/250',  PX+62,  by);
+  c.fillText('F2.8',   PX+188, by);
+  c.fillText('ISO 400',PX+300, by);
+  c.fillText(st.hunt ? 'AF-C' : 'AF LOCK', PX+460, by);
+  c.textAlign='right';
+  c.fillText(st.shot ? '[35]' : '[36]', PX+PW-30, by);
+
+  label(c,T().cvAfs, PX+34, 44, 22,'500','#6f6f76','left');
+  label(c,'RAW+JPEG',      PX+PW-30, 44, 22,'500','#6f6f76','right');
+
+  if (st.thumb>0){
+    c.save(); c.globalAlpha=st.thumb;
+    c.fillStyle='#39ff6a'; c.beginPath(); c.arc(PX+626, by, 7, 0, 7); c.fill();
+    label(c,T().cvRec, PX+646, by+1, 22,'600','#39ff6a','left');
+    c.restore();
+  }
+}
+
+/* ═══ 프레임 렌더 (미리보기·GIF 공용) ═══════════════ */
+function renderFrame(c, key, src, time, loop, scale){
+  const S = STYLES[key], st = tl(time, loop);
+  c.save(); c.scale(scale, scale);
+  if (key === 'ios')          drawIOS(c, S, src, st, false);
+  else if (key === 'iosL')    drawIOS(c, S, src, st, true);
+  else if (key === 'galaxy')  drawGalaxy(c, S, src, st, false);
+  else if (key === 'galaxyL') drawGalaxy(c, S, src, st, true);
+  else                        drawDSLR(c, S, src, st);
+  c.restore();
+}
+
+/* ═══ 화면 연결 ═════════════════════════════════════ */
+const cv=document.getElementById('stage'), ctx=cv.getContext('2d');
+const empty=document.getElementById('empty'), outsize=document.getElementById('outsize');
+const fileIn=document.getElementById('file'), drop=document.getElementById('drop');
+const dropTitle=document.getElementById('dropTitle');
+const saveBtn=document.getElementById('save'), replay=document.getElementById('replay');
+const pngBtn=document.getElementById('savePng');
+const bar=document.getElementById('bar'), barFill=bar.firstElementChild;
+const statusEl=document.getElementById('status'), loopChk=document.getElementById('loop');
+const camHint=document.getElementById('camHint');
+const capIn=document.getElementById('cap'), capItalic=document.getElementById('capItalic');
+
+let img=null, cam='ios', ori='p', gifScale=0.36, start=performance.now(), busy=false;
+const keyOf = () => cam==='dslr' ? 'dslr' : (ori==='l' ? cam+'L' : cam);
+
+function tick(now){
+  if (img && !busy){
+    /* GIF와 같은 프레임 격자에 맞춰 재생 — 미리보기 = 저장본 */
+    const raw = (now-start)%DUR;
+    const t = Math.floor(raw/FRAME)*FRAME;
+    renderFrame(ctx, keyOf(), img, t, loopChk.checked, 1);
+  }
+  requestAnimationFrame(tick);
+}
+requestAnimationFrame(tick);
+
+function updateSizeLabel(){
+  const S=STYLES[keyOf()];
+  const w=Math.round(S.w*gifScale/2)*2, h=Math.round(S.h*gifScale/2)*2;
+  outsize.textContent = img ? T().out(w,h) : '';
+}
+
+function setImage(source){
+  img=source; cv.hidden=false; empty.style.display='none';
+  saveBtn.disabled=false; pngBtn.disabled=false; dropTitle.textContent=T().dropAgain;
+  start=performance.now(); updateSizeLabel();
+}
+
+function applyStyle(){
+  const k=keyOf(), S=STYLES[k];
+  cv.width=S.w; cv.height=S.h;
+  camHint.textContent=T().hints[k];
+  document.querySelectorAll('#segOri button').forEach(b=>{
+    b.disabled = (cam==='dslr');
+    b.setAttribute('aria-pressed', cam!=='dslr' && b.dataset.ori===ori);
+  });
+  document.querySelectorAll('#segCam button').forEach(b=>
+    b.setAttribute('aria-pressed', b.dataset.cam===cam));
+  start=performance.now(); updateSizeLabel();
+}
+function applyLang(code){
+  LANG = code;
+  const D = T();
+  document.documentElement.lang = code;
+  document.title = D.title;
+  document.querySelectorAll('[data-i18n]').forEach(el=>{
+    const v = D[el.dataset.i18n];
+    if (v != null) el.innerHTML = v;
+  });
+  capIn.placeholder = D.capPh;
+  drop.setAttribute('aria-label', D.dropNew);
+  dropTitle.textContent = img ? D.dropAgain : D.dropNew;
+  camHint.textContent = D.hints[keyOf()];
+  statusEl.textContent = '';
+  document.querySelectorAll('#segLang button').forEach(b=>
+    b.setAttribute('aria-pressed', b.dataset.lang===code));
+  updateSizeLabel();
+}
+applyStyle();
+applyLang('ko');
+
+document.getElementById('segLang').addEventListener('click', e=>{
+  const b=e.target.closest('button'); if(!b) return; applyLang(b.dataset.lang);
+});
+
+document.getElementById('segCam').addEventListener('click', e=>{
+  const b=e.target.closest('button'); if(!b) return; cam=b.dataset.cam; applyStyle();
+});
+document.getElementById('segOri').addEventListener('click', e=>{
+  const b=e.target.closest('button'); if(!b||b.disabled) return; ori=b.dataset.ori; applyStyle();
+});
+document.getElementById('segSize').addEventListener('click', e=>{
+  const b=e.target.closest('button'); if(!b) return;
+  gifScale=parseFloat(b.dataset.scale);
+  document.querySelectorAll('#segSize button').forEach(x=>x.setAttribute('aria-pressed', x===b));
+  updateSizeLabel();
+});
+document.getElementById('segCapColor').addEventListener('click', e=>{
+  const b=e.target.closest('button'); if(!b) return;
+  CAP.color=b.dataset.color;
+  document.querySelectorAll('#segCapColor button').forEach(x=>x.setAttribute('aria-pressed', x===b));
+});
+capIn.addEventListener('input', ()=>{ CAP.text=capIn.value; });
+capItalic.addEventListener('change', ()=>{ CAP.italic=capItalic.checked; });
+replay.addEventListener('click', ()=> start=performance.now());
+
+/* 파일 입력 */
+function readFile(f){
+  if (!f || !f.type.startsWith('image/')){ statusEl.textContent=T().stImg; return; }
+  const r=new FileReader();
+  r.onload=()=>{ const i=new Image(); i.onload=()=>{setImage(i); statusEl.textContent='';}; i.src=r.result; };
+  r.readAsDataURL(f);
+}
+drop.addEventListener('click', ()=>fileIn.click());
+drop.addEventListener('keydown', e=>{ if(e.key==='Enter'||e.key===' '){e.preventDefault();fileIn.click();} });
+fileIn.addEventListener('change', e=>readFile(e.target.files[0]));
+['dragenter','dragover'].forEach(ev=>drop.addEventListener(ev,e=>{e.preventDefault();drop.classList.add('on');}));
+['dragleave','drop'].forEach(ev=>drop.addEventListener(ev,e=>{e.preventDefault();drop.classList.remove('on');}));
+drop.addEventListener('drop', e=>readFile(e.dataTransfer.files[0]));
+window.addEventListener('paste', e=>{
+  if (document.activeElement===capIn) return;
+  const it=[...(e.clipboardData?.items||[])].find(i=>i.type.startsWith('image/'));
+  if (it) readFile(it.getAsFile());
+});
+
+/* 샘플 */
+document.getElementById('sample').addEventListener('click', ()=>{
+  const s=document.createElement('canvas'); s.width=1600; s.height=1600;
+  const g=s.getContext('2d');
+  const sky=g.createLinearGradient(0,0,0,1100);
+  sky.addColorStop(0,'#0b2a4a'); sky.addColorStop(.45,'#e8734a'); sky.addColorStop(1,'#ffc46b');
+  g.fillStyle=sky; g.fillRect(0,0,1600,1600);
+  g.fillStyle='#fff3c4'; g.beginPath(); g.arc(1000,800,120,0,7); g.fill();
+  g.fillStyle='rgba(255,255,255,.75)';
+  for(let i=0;i<70;i++){ g.beginPath(); g.arc(Math.random()*1600, Math.random()*480, Math.random()*2.2, 0, 7); g.fill(); }
+  const ridge=(y,col,amp)=>{ g.fillStyle=col; g.beginPath(); g.moveTo(0,1600);
+    for(let x=0;x<=1600;x+=14) g.lineTo(x, y + Math.sin(x/200)*amp + Math.sin(x/61)*amp*0.35);
+    g.lineTo(1600,1600); g.closePath(); g.fill(); };
+  ridge(950,'#6b3f4e',80); ridge(1120,'#452a3c',110); ridge(1300,'#241726',70);
+  g.fillStyle='#12080f'; g.fillRect(0,1380,1600,220);
+  g.fillStyle='rgba(255,196,107,.18)'; g.fillRect(0,1380,1600,220);
+  setImage(s);
+});
+
+/* ═══ PNG 저장 — 초점이 맞은 마지막 장면 ═══════════ */
+pngBtn.addEventListener('click', ()=>{
+  if (!img || busy) return;
+  const key=keyOf(), S=STYLES[key], k=2;
+  const off=document.createElement('canvas');
+  off.width=S.w*k; off.height=S.h*k;
+  renderFrame(off.getContext('2d'), key, img, SHUT+700, false, k);
+  off.toBlob(blob=>{
+    if (!blob){ statusEl.textContent=T().stErr; return; }
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement('a');
+    a.href=url; a.download=`my-memory-${key}.png`; a.click();
+    setTimeout(()=>URL.revokeObjectURL(url), 4000);
+    statusEl.textContent=T().stPng(off.width, off.height);
+  }, 'image/png');
+});
+
+/* ═══ GIF 저장 ══════════════════════════════════════ */
+let workerURL=null;
+async function getWorkerURL(){
+  if (workerURL) return workerURL;
+  const res=await fetch('https://cdnjs.cloudflare.com/ajax/libs/gif.js/0.2.0/gif.worker.js');
+  workerURL=URL.createObjectURL(new Blob([await res.text()],{type:'application/javascript'}));
+  return workerURL;
+}
+
+saveBtn.addEventListener('click', async ()=>{
+  if (!img || busy) return;
+  if (typeof GIF==='undefined'){ statusEl.textContent=T().stLib; return; }
+
+  busy=true; saveBtn.disabled=true; pngBtn.disabled=true; replay.disabled=true;
+  bar.classList.add('on'); barFill.style.width='0%';
+  statusEl.textContent=T().stDraw;
+
+  try{
+    const wURL=await getWorkerURL();
+    const key=keyOf(), S=STYLES[key];
+    const w=Math.round(S.w*gifScale/2)*2, h=Math.round(S.h*gifScale/2)*2;
+    const off=document.createElement('canvas'); off.width=w; off.height=h;
+    const oc=off.getContext('2d');
+
+    const gif=new GIF({workers:2, quality:8, width:w, height:h, workerScript:wURL, dither:false});
+    const delay=Math.round(1000/FPS), doLoop=loopChk.checked;
+
+    for (let i=0;i<NFRAMES;i++){
+      oc.setTransform(1,0,0,1,0,0); oc.clearRect(0,0,w,h);
+      renderFrame(oc, key, img, i*FRAME, doLoop, w/S.w);
+      gif.addFrame(oc, {copy:true, delay});
+      if (i%6===0){ barFill.style.width=(i/NFRAMES*38)+'%'; await new Promise(r=>setTimeout(r)); }
+    }
+
+    statusEl.textContent=T().stEncode;
+    gif.on('progress', p=>{ barFill.style.width=(38+p*62)+'%'; });
+    gif.on('finished', blob=>{
+      const url=URL.createObjectURL(blob);
+      const a=document.createElement('a');
+      a.href=url; a.download=`my-memory-${key}.gif`; a.click();
+      setTimeout(()=>URL.revokeObjectURL(url), 4000);
+      statusEl.textContent=T().stDone(w,h,(blob.size/1048576).toFixed(1));
+      bar.classList.remove('on');
+      busy=false; saveBtn.disabled=false; pngBtn.disabled=false; replay.disabled=false; start=performance.now();
+    });
+    gif.render();
+  } catch(err){
+    console.error(err);
+    statusEl.textContent=T().stErr;
+    bar.classList.remove('on');
+    busy=false; saveBtn.disabled=false; pngBtn.disabled=false; replay.disabled=false;
+  }
+});
+})();
+</script>
+</body>
+</html>
